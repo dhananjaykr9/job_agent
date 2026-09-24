@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from ..schemas import JobCandidate
 from ..utils.logger import get_logger
+from ..utils.normalization import is_blocked_url
 
 logger = get_logger("job_agent.validation")
 
@@ -45,6 +46,8 @@ class ValidationAgent:
         if job.job_url:
             if not job.job_url.startswith(("http://", "https://")):
                 issues.append(f"Invalid URL format: {job.job_url}")
+            if is_blocked_url(job.job_url):
+                issues.append(f"Blocked non-job domain URL (e.g. Wikipedia/YouTube): {job.job_url}")
 
         # ── Suspicious patterns ─────────────────────────
         title_lower = job.job_title.lower()
@@ -60,18 +63,35 @@ class ValidationAgent:
         if any(kw in title_lower for kw in suspicious_keywords):
             issues.append(f"Suspicious job title: {job.job_title}")
 
+        # ── Job role check (must be a job opening, not a general topic/article) ──
+        valid_role_indicators = [
+            "engineer", "developer", "intern", "associate", "analyst", "specialist",
+            "trainee", "programmer", "architect", "lead", "consultant", "scientist",
+            "walk in", "walkin", "hiring", "drive", "officer", "executive", "member",
+            "sde", "swe", "fresher", "opening", "role", "position"
+        ]
+        if not any(ind in title_lower for ind in valid_role_indicators):
+            issues.append(f"Title appears to be a generic topic/article rather than a job opening: '{job.job_title}'")
+
         # ── Company name sanity ─────────────────────────
         if job.company_name:
-            if len(job.company_name) < 2:
-                issues.append("Company name too short")
-            if job.company_name.lower() in ["n/a", "na", "unknown", "--", "-"]:
-                issues.append("Placeholder company name")
+            clean_company = job.company_name.strip().lower()
+            if len(clean_company) <= 2:
+                issues.append(f"Company name too short/invalid: '{job.company_name}'")
+            invalid_companies = [
+                "en", "in", "it", "to", "at", "by", "for", "the", "an", "a",
+                "n/a", "na", "unknown", "--", "-", "it company", "company",
+                "wikipedia", "youtube", "reddit", "quora", "medium"
+            ]
+            if clean_company in invalid_companies:
+                issues.append(f"Placeholder or non-company name: '{job.company_name}'")
 
         # ── Determine validity ──────────────────────────
         has_required = not any("Missing required" in i for i in issues)
         is_suspicious = any("Suspicious" in i for i in issues)
+        is_blocked = any("Blocked non-job" in i or "generic topic" in i or "Company name too short" in i or "Placeholder or non-company" in i for i in issues)
 
-        is_valid = has_required and not is_suspicious
+        is_valid = has_required and not is_suspicious and not is_blocked
 
         if issues:
             logger.info(

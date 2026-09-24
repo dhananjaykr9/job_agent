@@ -62,38 +62,50 @@ def append_to_google_sheet_webhook(
     jobs: list[JobCandidate],
     mapper: ExcelMapper,
     headers: list[str],
+    sheet_name: str = "Job Tracker",
 ) -> int:
     """
     Send newly discovered jobs directly to the Google Sheet via Apps Script Webhook.
 
-    Each job is mapped to match the exact column order of the Google Sheet.
+    Supports writing to the main tracker tab or the 'Pending Review' tab.
     """
     if not webhook_url or not jobs:
         return 0
 
-    # Format each job as a list matching the sheet's column order
     rows_to_append = []
-    for job in jobs:
-        row_dict = mapper.job_to_row(job)
-        row_values = []
-        for header in headers:
-            val = row_dict.get(header, "")
-            # None or missing becomes empty string
-            row_values.append("" if val is None else str(val))
-        rows_to_append.append(row_values)
+    if sheet_name == "Pending Review":
+        for job in jobs:
+            rows_to_append.append([
+                job.company_name,
+                job.job_title,
+                job.location,
+                job.experience or "0-1 years",
+                ", ".join(job.skills) if job.skills else "",
+                job.job_url,
+                job.review_reason or "Borderline match",
+                f"{job.confidence_score:.0%}",
+            ])
+    else:
+        for job in jobs:
+            row_dict = mapper.job_to_row(job)
+            row_values = []
+            for header in headers:
+                val = row_dict.get(header, "")
+                row_values.append("" if val is None else str(val))
+            rows_to_append.append(row_values)
 
     try:
-        logger.info(f"Syncing {len(rows_to_append)} new jobs to live Google Sheet...")
+        logger.info(f"Syncing {len(rows_to_append)} jobs to Google Sheet tab '{sheet_name}'...")
         with httpx.Client(timeout=45.0, follow_redirects=True) as client:
             resp = client.post(
                 webhook_url,
-                json={"rows": rows_to_append},
+                json={"sheet": sheet_name, "rows": rows_to_append},
             )
             resp.raise_for_status()
             res_json = resp.json()
             if res_json.get("status") == "success":
                 added = res_json.get("added", len(rows_to_append))
-                logger.info(f"[bold green]Successfully added {added} rows directly to live Google Sheet![/]")
+                logger.info(f"[bold green]Successfully added {added} rows directly to live Google Sheet tab '{sheet_name}'![/]")
                 return added
             else:
                 logger.warning(f"Google Sheet webhook returned message: {res_json}")

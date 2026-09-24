@@ -157,3 +157,46 @@ def clean_url(url: str) -> str:
     url = re.sub(r"\?$", "", url)
     url = re.sub(r"\?&", "?", url)
     return url
+
+
+# Domains that NEVER represent job postings (encyclopedias, social media, tutorials, video sites)
+BLOCKED_DOMAINS = [
+    "wikipedia.org",
+    "wikimedia.org",
+    "wiktionary.org",
+    "youtube.com",
+    "youtu.be",
+    "facebook.com",
+    "instagram.com",
+    "twitter.com",
+    "x.com",
+    "reddit.com",
+    "quora.com",
+    "medium.com",
+    "github.com",
+    "gitlab.com",
+    "stackoverflow.com",
+    "stackexchange.com",
+    "geeksforgeeks.org",
+    "w3schools.com",
+    "tutorialspoint.com",
+    "javatpoint.com",
+    "coursera.org",
+    "udemy.com",
+    "edx.org",
+    "investopedia.com",
+    "britannica.com",
+    "dictionary.com",
+    "pinterest.com",
+    "amazon.in",
+    "amazon.com",
+    "flipkart.com",
+]
+
+
+def is_blocked_url(url: str) -> bool:
+    """Return True if URL belongs to an encyclopedia, tutorial site, social feed, etc."""
+    if not url:
+        return True
+    url_lower = url.lower()
+    return any(domain in url_lower for domain in BLOCKED_DOMAINS)

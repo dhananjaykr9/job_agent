@@ -288,15 +288,16 @@ def write_to_excel(state: JobSearchState) -> dict:
 
 
 # ═══════════════════════════════════════════════════════
-# Node: Save Review Jobs to DB
+# Node: Save Review Jobs to DB & Google Sheet
 # ═══════════════════════════════════════════════════════
 def save_review_jobs(state: JobSearchState) -> dict:
-    """Save jobs that need human review to the database."""
+    """Save jobs that need human review to the database and Pending Review sheet."""
     review_jobs = state.get("review_jobs", [])
     if not review_jobs:
         return {}
 
     settings = get_settings()
+    prefs = get_preferences()
     repo = JobRepository(settings.database_url)
 
     for job in review_jobs:
@@ -305,6 +306,21 @@ def save_review_jobs(state: JobSearchState) -> dict:
             repo.save_job(job)
         except Exception as e:
             logger.warning(f"Failed to save review job: {e}")
+
+    # Write borderline jobs to "Pending Review" tab in Google Sheet if configured
+    if settings.google_sheet_webhook_url:
+        mapper = ExcelMapper(
+            excel_headers=state.get("excel_headers", []),
+            custom_mapping=prefs.excel_column_mapping,
+            user_owned_columns=prefs.user_owned_columns,
+        )
+        append_to_google_sheet_webhook(
+            webhook_url=settings.google_sheet_webhook_url,
+            jobs=review_jobs,
+            mapper=mapper,
+            headers=state.get("excel_headers", []),
+            sheet_name="Pending Review",
+        )
 
     logger.info(f"Saved [warning]{len(review_jobs)} jobs[/] for human review")
     return {}
