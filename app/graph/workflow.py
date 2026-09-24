@@ -91,14 +91,12 @@ def build_workflow() -> StateGraph:
     # START → load_config
     graph.add_edge(START, "load_config")
 
-    # load_config → parallel source discovery
+    # Sequential search discovery (accumulates into raw_results safely)
     graph.add_edge("load_config", "search_web")
-    graph.add_edge("load_config", "search_linkedin")
-    graph.add_edge("load_config", "search_careers")
+    graph.add_edge("search_web", "search_linkedin")
+    graph.add_edge("search_linkedin", "search_careers")
 
-    # All sources → extract
-    graph.add_edge("search_web", "extract_jobs")
-    graph.add_edge("search_linkedin", "extract_jobs")
+    # Sources complete → Extraction
     graph.add_edge("search_careers", "extract_jobs")
 
     # Sequential pipeline

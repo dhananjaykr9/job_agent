@@ -49,21 +49,32 @@ class ExtractionAgent:
     """Extracts structured job data from raw content using Gemini."""
 
     def __init__(self, api_key: str, model: str = "gemini-2.0-flash"):
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(
-            model,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=0.1,  # Low temperature for factual extraction
-            ),
-        )
+        self.has_api_key = bool(api_key and "your_gemini" not in str(api_key).lower() and len(str(api_key).strip()) > 5)
+        if self.has_api_key:
+            try:
+                genai.configure(api_key=api_key)
+                self.model = genai.GenerativeModel(
+                    model,
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type="application/json",
+                        temperature=0.1,  # Low temperature for factual extraction
+                    ),
+                )
+            except Exception as e:
+                logger.warning(f"Could not configure Gemini ({e}) — will use smart heuristic extraction")
+                self.model = None
+                self.has_api_key = False
+        else:
+            self.model = None
+            logger.warning("No valid GEMINI_API_KEY provided — running in smart heuristic extraction mode!")
 
     def extract(self, raw_result: RawJobResult) -> ExtractionResult | None:
         """
         Extract structured job data from a single raw result.
-
-        Returns None if extraction fails or confidence is too low.
+        Uses Gemini if configured, otherwise falls back to smart heuristic parsing.
         """
+        if not self.has_api_key or not self.model:
+            return self._heuristic_extract(raw_result)
         try:
             prompt = (
                 f"{EXTRACTION_PROMPT}\n\n"
@@ -149,7 +160,7 @@ class ExtractionAgent:
             location=location or "Pune / Hyderabad / Bangalore",
             experience="0-1 years",
             status="active",
-            confidence=0.75,
+            confidence=0.85,
             description=snippet[:500],
         )
 
@@ -173,16 +184,22 @@ class ExtractionAgent:
         )
 
         for raw in sorted_results:
-            if llm_count < max_llm_calls:
+            if self.has_api_key and llm_count < max_llm_calls:
                 result = self.extract(raw)
                 llm_count += 1
                 time.sleep(2.5)  # Stay safely within 15 RPM free limit
             else:
-                # Use fast heuristic for the remainder
+                # Use fast heuristic parser
                 result = self._heuristic_extract(raw)
 
             if result is None or not result.company_name or not result.job_title:
                 continue
+
+            disc_at = (
+                raw.discovered_at.isoformat()
+                if hasattr(raw.discovered_at, "isoformat")
+                else str(raw.discovered_at)
+            )
 
             candidate = JobCandidate(
                 company_name=result.company_name,
@@ -203,7 +220,7 @@ class ExtractionAgent:
                 application_method=result.application_method,
                 status=result.status,
                 confidence_score=result.confidence,
-                discovered_at=raw.discovered_at.isoformat(),
+                discovered_at=disc_at,
             )
             candidates.append(candidate)
 

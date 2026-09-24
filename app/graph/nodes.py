@@ -231,6 +231,13 @@ def deduplicate_jobs(state: JobSearchState) -> dict:
             job.match_result = "reject"
             job.match_reason = f"Low confidence: {job.confidence_score:.0%}"
 
+    # If no jobs hit the strict auto_add_threshold, promote top verified matches (>=0.50)
+    if not auto_add and unique:
+        top_candidates = [j for j in unique if j.confidence_score >= 0.50]
+        if top_candidates:
+            logger.info(f"Promoting {len(top_candidates)} verified matches to auto-add")
+            auto_add = top_candidates[:20]
+
     return {
         "unique_jobs": unique,
         "duplicate_jobs": all_dupes,

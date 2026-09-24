@@ -440,9 +440,9 @@ walkin_queries:
 # Confidence Thresholds
 # ──────────────────────────────────────────────
 confidence_thresholds:
-  auto_add: 0.80
-  review: 0.50
-  reject: 0.30
+  auto_add: 0.60
+  review: 0.40
+  reject: 0.20
 
 # ──────────────────────────────────────────────
 # Excel Column Mapping
