@@ -1,0 +1,464 @@
+# ──────────────────────────────────────────────
+# Job Discovery Preferences
+# Modify these to customize your job search
+# ──────────────────────────────────────────────
+
+location:
+  include:
+    - Pune
+    - Hyderabad
+    - Bangalore
+    - Bengaluru
+    - Remote
+    - Hybrid
+    - India
+    - Work From Home
+    - WFH
+
+experience:
+  maximum_years: 1
+
+roles:
+  include:
+    - Data Engineer
+    - Junior Data Engineer
+    - Associate Data Engineer
+    - ETL Developer
+    - Python Developer
+    - SQL Developer
+    - AI Engineer
+    - ML Engineer
+    - Machine Learning Engineer
+    - Prompt Engineer
+    - Software Engineer
+    - Backend Developer
+    - Data Engineer Intern
+    - Automation Engineer
+    - Forward Deployed Engineer
+    - Robotics Engineer
+    - DevOps Engineer
+    - Cloud Engineer
+    - Data Pipeline Engineer
+    - Software Developer
+    - Full Stack Developer
+    - Platform Engineer
+    - Site Reliability Engineer
+
+  exclude:
+    - Data Analyst
+    - Business Analyst
+    - BI Analyst
+    - Analytics Analyst
+    - BPO
+    - Voice Process
+    - Desktop Support
+    - Customer Support
+    - Sales Executive
+    - Telecaller
+    - Content Writer
+    - HR Executive
+    - Accountant
+    - Digital Marketing
+    - SEO Executive
+    - Graphic Designer
+
+job_status:
+  active_only: true
+
+posting_date:
+  maximum_age_days: 30
+
+# ──────────────────────────────────────────────
+# Search Queries — broad internet-wide discovery
+# ──────────────────────────────────────────────
+search_queries:
+  # ── Pune ─────────────────────────────────────
+  - "Data Engineer Pune fresher hiring 2026"
+  - "Junior Data Engineer Pune"
+  - "Python Developer Pune 0-1 years experience"
+  - "SQL Developer Pune entry level"
+  - "ETL Developer Pune fresher"
+  - "AI Engineer Pune hiring"
+  - "ML Engineer Pune fresher"
+  - "Software Engineer Pune entry level hiring"
+  - "Data Engineering internship Pune"
+  - "Backend Developer Pune fresher hiring"
+  - "DevOps Engineer Pune entry level"
+  - "startup hiring engineer Pune 2026"
+  - "Pune IT company fresher openings"
+  - "hiring freshers Pune software engineer"
+
+  # ── Hyderabad ────────────────────────────────
+  - "Data Engineer Hyderabad fresher hiring"
+  - "Junior Data Engineer Hyderabad"
+  - "Python Developer Hyderabad entry level"
+  - "Software Engineer Hyderabad fresher hiring"
+  - "AI Engineer Hyderabad hiring"
+  - "startup hiring engineer Hyderabad 2026"
+  - "Backend Developer Hyderabad fresher"
+  - "Hyderabad IT company fresher openings"
+
+  # ── Bangalore ────────────────────────────────
+  - "Data Engineer Bangalore fresher hiring"
+  - "Junior Data Engineer Bengaluru"
+  - "Python Developer Bangalore entry level"
+  - "Software Engineer Bangalore fresher hiring"
+  - "ML Engineer Bangalore fresher"
+  - "startup hiring engineer Bangalore 2026"
+  - "Backend Developer Bangalore fresher"
+  - "Bengaluru IT company fresher openings"
+
+  # ── Walk-in Drives ──────────────────────────
+  - "walk in drive Pune IT fresher 2026"
+  - "walk in interview Pune software engineer"
+  - "walk in drive Pune Python developer"
+  - "walk in drive Pune data engineer"
+  - "walkin Pune IT company fresher"
+  - "walk in drive Hyderabad IT fresher"
+  - "walk in interview Bangalore software"
+  - "IT walk in drive fresher engineer 2026"
+  - "fresher walk in Pune developer"
+  - "walk in interview Pune engineering"
+
+  # ── Broad startup / midcap discovery ────────
+  - "startups hiring engineers Pune 2026"
+  - "midcap IT companies hiring Pune fresher"
+  - "series A B startup Pune hiring engineer"
+  - "product based company Pune hiring fresher"
+  - "SaaS startup Pune hiring developer"
+  - "startups hiring engineers Hyderabad 2026"
+  - "startups hiring engineers Bangalore 2026"
+  - "top startups Pune careers"
+  - "top startups Hyderabad careers"
+  - "top startups Bangalore careers"
+  - "YC startup India hiring engineer"
+  - "funded startup India hiring fresher developer"
+
+# ──────────────────────────────────────────────
+# LinkedIn Post Keywords
+# ──────────────────────────────────────────────
+linkedin_post_keywords:
+  # ── Pune ─────────────────────────────────────
+  - '"hiring" "data engineer" "Pune"'
+  - '"we are hiring" "Pune" "engineer"'
+  - '"fresher hiring" "Pune"'
+  - '"walk in" "Pune" "Python"'
+  - '"referral" "data engineer" "Pune"'
+  - '"looking for" "data engineer" "Pune"'
+  - '"immediate joiner" "Pune" "engineer"'
+  - '"hiring" "AI engineer" "Pune"'
+  - '"hiring" "Python developer" "Pune"'
+  - '"openings" "Pune" "fresher" "engineer"'
+  - '"walk in drive" "Pune" "IT"'
+  - '"walk in interview" "Pune" "developer"'
+  - '"startup" "hiring" "Pune" "engineer"'
+
+  # ── Hyderabad ────────────────────────────────
+  - '"hiring" "engineer" "Hyderabad"'
+  - '"we are hiring" "Hyderabad" "developer"'
+  - '"fresher hiring" "Hyderabad" "engineer"'
+  - '"walk in" "Hyderabad" "IT"'
+  - '"startup" "hiring" "Hyderabad" "engineer"'
+  - '"referral" "engineer" "Hyderabad"'
+
+  # ── Bangalore ────────────────────────────────
+  - '"hiring" "engineer" "Bangalore"'
+  - '"we are hiring" "Bengaluru" "developer"'
+  - '"fresher hiring" "Bangalore" "engineer"'
+  - '"walk in" "Bangalore" "IT"'
+  - '"startup" "hiring" "Bangalore" "engineer"'
+  - '"referral" "engineer" "Bengaluru"'
+
+  # ── Broad ────────────────────────────────────
+  - '"hiring" "data engineer" "India" "fresher"'
+  - '"walk in drive" "IT" "fresher" 2026'
+  - '"immediate joiner" "Python" "engineer"'
+
+# ──────────────────────────────────────────────
+# Target Companies — Pune, Hyderabad, Bangalore
+# Startups, Midcaps, and Product Companies
+# ──────────────────────────────────────────────
+target_companies:
+  # ── Pune — Large / Midcap ────────────────────
+  - name: Persistent Systems
+    career_url: https://careers.persistent.com/
+  - name: Zensar Technologies
+    career_url: https://www.zensar.com/careers
+  - name: Quick Heal
+    career_url: https://www.quickheal.com/careers
+  - name: KPIT Technologies
+    career_url: https://www.kpit.com/careers
+  - name: Emerson
+    career_url: https://www.emerson.com/en-in/careers
+  - name: Amdocs
+    career_url: https://www.amdocs.com/careers
+  - name: Synechron
+    career_url: https://www.synechron.com/careers
+  - name: Cybage
+    career_url: https://www.cybage.com/careers
+  - name: Veritas
+    career_url: https://www.veritas.com/careers
+  - name: BMC Software
+    career_url: https://www.bmc.com/careers
+  - name: Pubmatic
+    career_url: https://pubmatic.com/careers/
+  - name: Druva
+    career_url: https://www.druva.com/careers
+  - name: Icertis
+    career_url: https://www.icertis.com/careers
+  - name: Cuemath
+    career_url: https://www.cuemath.com/careers/
+  - name: Barclays
+    career_url: https://home.barclays/careers/
+  - name: Mastercard
+    career_url: https://www.mastercard.com/careers
+  - name: Deutsche Bank
+    career_url: https://careers.db.com/
+  - name: HSBC
+    career_url: https://www.hsbc.com/careers
+
+  # ── Pune — Startups / Product Companies ──────
+  - name: DeHaat
+    career_url: https://www.dehaat.com/careers
+  - name: PhonePe
+    career_url: https://www.phonepe.com/careers/
+  - name: FirstCry
+    career_url: https://www.firstcry.com/careers
+  - name: MiQ
+    career_url: https://www.wearemiq.com/careers/
+  - name: Quantiphi
+    career_url: https://quantiphi.com/careers/
+  - name: Searce
+    career_url: https://www.searce.com/careers
+  - name: BrowserStack
+    career_url: https://www.browserstack.com/careers
+  - name: Acceldata
+    career_url: https://www.acceldata.io/careers
+  - name: Clari
+    career_url: https://www.clari.com/careers
+  - name: Forcepoint
+    career_url: https://www.forcepoint.com/company/careers
+  - name: Priceline
+    career_url: https://careers.priceline.com/
+  - name: Sarvaha
+    career_url: https://www.sarvaha.com/careers
+  - name: Aker Systems
+    career_url: https://www.akersystems.com/careers
+  - name: TechVariable
+    career_url: https://techvariable.com/careers/
+  - name: Harbinger Group
+    career_url: https://www.harbingergroup.com/careers
+  - name: Cumulations
+    career_url: https://cumulations.com/careers
+  - name: Josh Software
+    career_url: https://www.joshsoftware.com/careers
+  - name: BigBinary
+    career_url: https://www.bigbinary.com/jobs
+  - name: Calsoft
+    career_url: https://www.calsoftinc.com/careers.html
+  - name: e-Zest Solutions
+    career_url: https://www.e-zest.com/careers
+
+  # ── Hyderabad — Large / Midcap ───────────────
+  - name: ServiceNow
+    career_url: https://www.servicenow.com/careers.html
+  - name: Qualcomm
+    career_url: https://www.qualcomm.com/company/careers
+  - name: Google Hyderabad
+    career_url: https://careers.google.com/
+  - name: Amazon Hyderabad
+    career_url: https://www.amazon.jobs/
+  - name: Microsoft Hyderabad
+    career_url: https://careers.microsoft.com/
+  - name: Salesforce
+    career_url: https://www.salesforce.com/company/careers/
+  - name: DBS Bank
+    career_url: https://www.dbs.com/careers/
+  - name: Deloitte
+    career_url: https://www2.deloitte.com/careers
+  - name: ADP
+    career_url: https://jobs.adp.com/
+  - name: Epam Systems
+    career_url: https://www.epam.com/careers
+  - name: Arcesium
+    career_url: https://www.arcesium.com/careers
+
+  # ── Hyderabad — Startups ──────────────────────
+  - name: Darwinbox
+    career_url: https://darwinbox.com/careers
+  - name: GreyOrange
+    career_url: https://www.greyorange.com/careers
+  - name: Playerzpot
+    career_url: https://www.playerzpot.com/careers
+  - name: Commvault
+    career_url: https://www.commvault.com/careers
+  - name: Khoros
+    career_url: https://www.khoros.com/company/careers
+  - name: Zenoti
+    career_url: https://www.zenoti.com/careers
+  - name: Synamedia
+    career_url: https://www.synamedia.com/careers
+  - name: Gameskraft
+    career_url: https://gameskraft.com/careers/
+  - name: PureSoftware
+    career_url: https://www.puresoftware.com/careers/
+
+  # ── Bangalore — Large / Midcap ───────────────
+  - name: Flipkart
+    career_url: https://www.flipkartcareers.com/
+  - name: Swiggy
+    career_url: https://careers.swiggy.com/
+  - name: Razorpay
+    career_url: https://razorpay.com/careers/
+  - name: CRED
+    career_url: https://careers.cred.club/
+  - name: Zerodha
+    career_url: https://zerodha.com/careers
+  - name: Meesho
+    career_url: https://meesho.io/careers
+  - name: Groww
+    career_url: https://groww.in/careers
+  - name: Postman
+    career_url: https://www.postman.com/careers/
+  - name: Atlassian
+    career_url: https://www.atlassian.com/company/careers
+  - name: SAP Labs
+    career_url: https://www.sap.com/careers.html
+  - name: Cisco
+    career_url: https://jobs.cisco.com/
+  - name: Intel
+    career_url: https://www.intel.com/content/www/us/en/jobs/jobs-at-intel.html
+  - name: VMware
+    career_url: https://careers.vmware.com/
+  - name: NetApp
+    career_url: https://www.netapp.com/careers/
+  - name: Nutanix
+    career_url: https://www.nutanix.com/company/careers
+
+  # ── Bangalore — Startups ──────────────────────
+  - name: Navi
+    career_url: https://navi.com/careers
+  - name: Jupiter
+    career_url: https://jupiter.money/careers/
+  - name: Zeta
+    career_url: https://www.zeta.tech/careers
+  - name: Chargebee
+    career_url: https://www.chargebee.com/company/careers/
+  - name: Hasura
+    career_url: https://hasura.io/careers
+  - name: Skit.ai
+    career_url: https://skit.ai/careers/
+  - name: Yellow.ai
+    career_url: https://yellow.ai/careers/
+  - name: Leena AI
+    career_url: https://leena.ai/careers
+  - name: Atlan
+    career_url: https://atlan.com/careers/
+  - name: Rocketlane
+    career_url: https://www.rocketlane.com/careers
+  - name: CleverTap
+    career_url: https://www.clevertap.com/careers/
+  - name: Unacademy
+    career_url: https://unacademy.com/careers
+  - name: Licious
+    career_url: https://www.licious.in/careers
+  - name: Urban Company
+    career_url: https://www.urbancompany.com/careers
+  - name: Ola
+    career_url: https://www.olacabs.com/careers
+  - name: Spinny
+    career_url: https://www.spinny.com/careers/
+  - name: Slice
+    career_url: https://www.sliceit.com/careers
+  - name: Open Financial
+    career_url: https://open.money/careers
+  - name: INDmoney
+    career_url: https://www.indmoney.com/careers
+  - name: MoEngage
+    career_url: https://www.moengage.com/careers/
+  - name: Mindtickle
+    career_url: https://www.mindtickle.com/careers/
+  - name: LambdaTest
+    career_url: https://www.lambdatest.com/careers
+  - name: Simplilearn
+    career_url: https://www.simplilearn.com/careers
+  - name: Scaler
+    career_url: https://www.scaler.com/careers
+
+# ──────────────────────────────────────────────
+# Dynamic Company Discovery Queries
+# The agent uses these to find companies it doesn't know about
+# ──────────────────────────────────────────────
+company_discovery_queries:
+  - "top startups Pune hiring engineers 2026"
+  - "best startups Pune careers page"
+  - "Pune product based companies list"
+  - "funded startups Pune series A B hiring"
+  - "SaaS companies Pune careers"
+  - "IT companies Pune Hinjewadi hiring"
+  - "IT companies Pune Kharadi hiring"
+  - "IT companies Pune Baner hiring"
+  - "top startups Hyderabad hiring engineers"
+  - "best startups Hyderabad HITEC City careers"
+  - "product based companies Hyderabad hiring"
+  - "funded startups Hyderabad hiring"
+  - "top startups Bangalore hiring engineers"
+  - "best startups Bangalore careers page"
+  - "product based companies Bangalore hiring fresher"
+  - "funded startups Bangalore series A B hiring"
+  - "YC companies India Pune Bangalore Hyderabad careers"
+  - "Nasscom top startups India hiring"
+  - "best midcap IT companies India hiring fresher"
+  - "walk in drive Pune IT companies list"
+  - "walk in drive Hyderabad IT companies"
+  - "walk in drive Bangalore IT companies"
+
+# ──────────────────────────────────────────────
+# Walk-in Drive Specific Queries
+# ──────────────────────────────────────────────
+walkin_queries:
+  - "walk in drive Pune IT fresher today"
+  - "walk in drive Pune software engineer this week"
+  - "walk in interview Pune Python developer"
+  - "walk in drive Pune data engineer"
+  - "walkin Pune developer fresher 2026"
+  - "walk in Pune IT company September October 2026"
+  - "mega walk in drive Pune IT"
+  - "walk in drive Hinjewadi Pune"
+  - "walk in drive Kharadi Pune"
+  - "walk in drive Baner Pune"
+  - "walk in drive Hyderabad IT fresher"
+  - "walk in drive HITEC City Hyderabad"
+  - "walk in drive Bangalore IT fresher"
+  - "walk in drive Whitefield Bangalore"
+  - "walk in drive Electronic City Bangalore"
+  - "IT fresher walk in drive India 2026"
+  - "mass hiring drive Pune engineer"
+  - "pool campus drive Pune engineering"
+
+# ──────────────────────────────────────────────
+# Confidence Thresholds
+# ──────────────────────────────────────────────
+confidence_thresholds:
+  auto_add: 0.80
+  review: 0.50
+  reject: 0.30
+
+# ──────────────────────────────────────────────
+# Excel Column Mapping
+# ──────────────────────────────────────────────
+excel_column_mapping:
+  Company: company_name
+  Role: job_title
+  Location: location
+  Experience: experience
+  Tech: skills
+  Job URL: job_url
+  Recruiter: recruiter_name
+
+# Columns the agent must NEVER overwrite
+user_owned_columns:
+  - Applied
+  - Employee Contacted
+  - Follow-up Date
+  - Status

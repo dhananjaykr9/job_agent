@@ -1,0 +1,29 @@
+# Environment
+.env
+.venv/
+venv/
+env/
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+logs/
+
+# Excel backups
+backups/
+
+# OS
+.DS_Store
+Thumbs.db
