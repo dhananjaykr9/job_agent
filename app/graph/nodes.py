@@ -24,6 +24,7 @@ from ..database.repository import JobRepository
 from ..excel.reader import ExcelReader
 from ..excel.mapper import ExcelMapper
 from ..excel.writer import ExcelWriter
+from ..excel.google_sheets import fetch_live_google_sheet, append_to_google_sheet_webhook
 from ..schemas import RawJobResult, SourceType
 from ..utils.logger import get_logger
 
@@ -41,6 +42,10 @@ def load_config(state: JobSearchState) -> dict:
 
     settings = get_settings()
     prefs = get_preferences()
+
+    # Sync latest data from live Google Sheet if configured
+    if settings.google_sheet_url:
+        fetch_live_google_sheet(settings.google_sheet_url, settings.excel_file_path)
 
     # Read existing Excel to check for already-tracked jobs
     excel_headers = []
@@ -265,6 +270,15 @@ def write_to_excel(state: JobSearchState) -> dict:
     )
     writer = ExcelWriter(settings.excel_file_path, mapper)
     written = writer.write_jobs(jobs)
+
+    # Sync directly to live Google Sheet via webhook if configured
+    if settings.google_sheet_webhook_url:
+        append_to_google_sheet_webhook(
+            webhook_url=settings.google_sheet_webhook_url,
+            jobs=jobs,
+            mapper=mapper,
+            headers=state.get("excel_headers", []),
+        )
 
     # Save to database and mark as added
     repo = JobRepository(settings.database_url)

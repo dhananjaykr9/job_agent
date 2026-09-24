@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     gemini_model: str = Field(default="gemini-2.0-flash", alias="GEMINI_MODEL")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     schedule_interval_hours: int = Field(default=1, alias="SCHEDULE_INTERVAL_HOURS")
+    google_sheet_url: str = Field(
+        default="https://docs.google.com/spreadsheets/d/1Naq2pmSfyt8ulXpq-7SKFmXfaerYnvkbjSy83SXRmT0/edit?usp=sharing",
+        alias="GOOGLE_SHEET_URL",
+    )
+    google_sheet_webhook_url: str = Field(default="", alias="GOOGLE_SHEET_WEBHOOK_URL")
 
     model_config = {
         "env_file": ".env",

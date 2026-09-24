@@ -35,6 +35,8 @@ jobs:
       - name: Run Job Discovery
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_SHEET_WEBHOOK_URL: ${{ secrets.GOOGLE_SHEET_WEBHOOK_URL }}
+          GOOGLE_SHEET_URL: "https://docs.google.com/spreadsheets/d/1Naq2pmSfyt8ulXpq-7SKFmXfaerYnvkbjSy83SXRmT0/edit?usp=sharing"
           EXCEL_FILE_PATH: ./jobs_tracker.xlsx
           DATABASE_URL: sqlite:///./job_agent.db
           LOG_LEVEL: INFO
