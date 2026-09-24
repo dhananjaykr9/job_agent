@@ -135,32 +135,20 @@ def extract_jobs(state: JobSearchState) -> dict:
         logger.warning("No raw results to extract.")
         return {"extracted_jobs": []}
 
-    logger.info(f"Extracting from [bold]{len(raw_results)}[/] raw results...")
+    logger.info(f"Processing [bold]{len(raw_results)}[/] raw results...")
 
     settings = get_settings()
 
-    # Classify LinkedIn posts first
-    classifier = ClassificationAgent(settings.gemini_api_key, settings.gemini_model)
-    linkedin_posts = [r for r in raw_results if r.source_type == SourceType.LINKEDIN_POST]
-    other_results = [r for r in raw_results if r.source_type != SourceType.LINKEDIN_POST]
+    # Pre-filter: only keep results that have job-related keywords to avoid noise
+    job_kws = ["engineer", "developer", "data", "python", "sql", "ai", "ml", "fresher", "walk in", "walkin", "intern", "hiring", "openings"]
+    promising_results = [
+        r for r in raw_results
+        if any(kw in f"{r.title or ''} {r.snippet or ''} {r.url}".lower() for kw in job_kws)
+    ]
+    logger.info(f"Filtered to [bold]{len(promising_results)}[/] high-relevance candidates")
 
-    # Filter LinkedIn posts — only keep actionable ones
-    filtered_linkedin: list[RawJobResult] = []
-    for post in linkedin_posts:
-        result = classifier.classify(post.raw_content, post.url)
-        if classifier.is_actionable(result):
-            post.raw_content = f"[Classification: {result.classification}]\n{post.raw_content}"
-            filtered_linkedin.append(post)
-
-    logger.info(
-        f"LinkedIn posts: {len(filtered_linkedin)} actionable / "
-        f"{len(linkedin_posts)} total"
-    )
-
-    # Extract all results
-    all_results = other_results + filtered_linkedin
     extractor = ExtractionAgent(settings.gemini_api_key, settings.gemini_model)
-    candidates = extractor.extract_batch(all_results)
+    candidates = extractor.extract_batch(promising_results or raw_results[:30])
 
     return {"extracted_jobs": candidates}
 

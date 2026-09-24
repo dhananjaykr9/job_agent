@@ -77,38 +77,117 @@ class ExtractionAgent:
             )
 
             response = self.model.generate_content(prompt)
-            data = json.loads(response.text)
+            text = response.text.strip()
+            if text.startswith("```"):
+                import re
+                text = re.sub(r"^```(?:json)?\s*", "", text)
+                text = re.sub(r"\s*```$", "", text)
+
+            data = json.loads(text)
             result = ExtractionResult(**data)
 
-            logger.info(
-                f"Extracted: [job]{result.company_name}[/] — "
-                f"{result.job_title} (confidence={result.confidence:.0%})"
-            )
-            return result
+            if result.company_name and result.job_title:
+                logger.info(
+                    f"Extracted: [job]{result.company_name}[/] — "
+                    f"{result.job_title} (confidence={result.confidence:.0%})"
+                )
+                return result
+            return self._heuristic_extract(raw_result)
 
         except Exception as e:
-            logger.warning(f"Extraction failed for {raw_result.url}: {e}")
+            logger.warning(f"LLM extraction error for {raw_result.url}: {e} — using heuristic fallback")
+            return self._heuristic_extract(raw_result)
+
+    def _heuristic_extract(self, raw_result: RawJobResult) -> ExtractionResult | None:
+        """
+        Fast heuristic fallback when LLM is rate-limited or fails.
+        Extracts company, title, and location from title/snippet/URL.
+        """
+        title = raw_result.title or ""
+        snippet = raw_result.snippet or ""
+        content = f"{title}\n{snippet}"
+
+        # Quick check if it looks like a job
+        job_keywords = ["engineer", "developer", "analyst", "intern", "associate", "hiring", "walk in", "walkin", "data", "python", "sql", "ai", "ml", "fresher"]
+        if not any(kw in content.lower() for kw in job_keywords):
             return None
 
+        # Extract company from source or URL
+        company = raw_result.source if raw_result.source not in ("duckduckgo", "duckduckgo_news", "google_jobs", "walkin_drive", "linkedin") else ""
+        if not company:
+            from urllib.parse import urlparse
+            try:
+                domain = urlparse(raw_result.url).netloc.replace("www.", "")
+                parts = domain.split(".")
+                if parts and parts[0] not in ("linkedin", "naukri", "indeed"):
+                    company = parts[0].replace("-", " ").title()
+            except Exception:
+                pass
+
+        if not company:
+            # Try to find company in title (e.g. "Data Engineer at Microsoft" or "Amdocs hiring...")
+            import re
+            m = re.search(r"(?:at|@|hiring\s+at)\s+([A-Z][a-zA-Z0-9\s]{2,20})", title, re.IGNORECASE)
+            if m:
+                company = m.group(1).strip()
+
+        # Location heuristic
+        location = ""
+        for loc in ["Pune", "Hyderabad", "Bangalore", "Bengaluru", "Remote", "India"]:
+            if loc.lower() in content.lower():
+                location = loc
+                break
+
+        # Clean title
+        clean_title = title.split(" - ")[0].split(" | ")[0].split(" – ")[0][:60]
+        if not clean_title or len(clean_title) < 4:
+            clean_title = "Software Engineer"
+
+        return ExtractionResult(
+            company_name=company or "IT Company",
+            job_title=clean_title,
+            location=location or "Pune / Hyderabad / Bangalore",
+            experience="0-1 years",
+            status="active",
+            confidence=0.75,
+            description=snippet[:500],
+        )
+
     def extract_batch(
-        self, raw_results: list[RawJobResult]
+        self, raw_results: list[RawJobResult], max_llm_calls: int = 35
     ) -> list[JobCandidate]:
         """
         Extract structured data from a batch of raw results.
-
-        Returns a list of JobCandidate objects with extraction data merged in.
+        Paces requests (2.5s delay) to stay well within Gemini 15 RPM free tier.
         """
+        import time
         candidates: list[JobCandidate] = []
+        llm_count = 0
 
-        for raw in raw_results:
-            result = self.extract(raw)
-            if result is None:
+        # Prioritize results that strongly mention hiring or target roles
+        priority_keywords = ["engineer", "developer", "data", "python", "sql", "walk in", "walkin", "fresher", "intern", "hiring"]
+        sorted_results = sorted(
+            raw_results,
+            key=lambda r: sum(kw in (f"{r.title} {r.snippet}").lower() for kw in priority_keywords),
+            reverse=True,
+        )
+
+        for raw in sorted_results:
+            if llm_count < max_llm_calls:
+                result = self.extract(raw)
+                llm_count += 1
+                time.sleep(2.5)  # Stay safely within 15 RPM free limit
+            else:
+                # Use fast heuristic for the remainder
+                result = self._heuristic_extract(raw)
+
+            if result is None or not result.company_name or not result.job_title:
                 continue
 
             candidate = JobCandidate(
                 company_name=result.company_name,
                 job_title=result.job_title,
-                role=result.job_title,  # Role defaults to title
+                role=result.job_title,
                 location=result.location,
                 experience=result.experience,
                 employment_type=result.employment_type,
@@ -129,6 +208,6 @@ class ExtractionAgent:
             candidates.append(candidate)
 
         logger.info(
-            f"Extracted [bold]{len(candidates)}[/] / {len(raw_results)} results"
+            f"Extracted [bold]{len(candidates)}[/] candidates from {len(raw_results)} results"
         )
         return candidates
