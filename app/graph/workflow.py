@@ -17,6 +17,7 @@ from .nodes import (
     search_web,
     search_linkedin_posts,
     search_company_careers,
+    search_direct_boards,
     extract_jobs,
     validate_jobs,
     match_jobs,
@@ -78,6 +79,7 @@ def build_workflow() -> StateGraph:
     graph.add_node("search_web", search_web)
     graph.add_node("search_linkedin", search_linkedin_posts)
     graph.add_node("search_careers", search_company_careers)
+    graph.add_node("search_direct", search_direct_boards)
     graph.add_node("extract_jobs", extract_jobs)
     graph.add_node("validate_jobs", validate_jobs)
     graph.add_node("match_jobs", match_jobs)
@@ -95,9 +97,10 @@ def build_workflow() -> StateGraph:
     graph.add_edge("load_config", "search_web")
     graph.add_edge("search_web", "search_linkedin")
     graph.add_edge("search_linkedin", "search_careers")
+    graph.add_edge("search_careers", "search_direct")
 
-    # Sources complete → Extraction
-    graph.add_edge("search_careers", "extract_jobs")
+    # All sources done -> Extraction
+    graph.add_edge("search_direct", "extract_jobs")
 
     # Sequential pipeline
     graph.add_edge("extract_jobs", "validate_jobs")

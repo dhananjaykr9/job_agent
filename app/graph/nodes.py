@@ -15,6 +15,7 @@ from ..config.settings import get_settings, get_preferences
 from ..sources.web_search import WebSearchSource
 from ..sources.linkedin_posts import LinkedInPostsSource
 from ..sources.company_careers import CompanyCareersSource
+from ..sources.direct_job_boards import DirectJobBoardSource
 from ..agents.extraction import ExtractionAgent
 from ..agents.classification import ClassificationAgent
 from ..agents.validation import ValidationAgent
@@ -123,6 +124,21 @@ def search_company_careers(state: JobSearchState) -> dict:
     except Exception as e:
         logger.error(f"Career pages node failed: {e}")
         return {"raw_results": [], "errors": [f"Career pages error: {e}"]}
+
+
+# ═══════════════════════════════════════════════════════
+# Node: Direct Job Board Scraping (Naukri, Shine, Freshersworld, LinkedIn)
+# ═══════════════════════════════════════════════════════
+def search_direct_boards(state: JobSearchState) -> dict:
+    """Scrape Naukri walk-ins, Shine, Freshersworld & LinkedIn Jobs directly."""
+    try:
+        source = DirectJobBoardSource()
+        results = source._safe_search([])
+        return {"raw_results": results}
+    except Exception as e:
+        logger.error(f"Direct job boards node failed: {e}")
+        return {"raw_results": [], "errors": [f"Direct boards error: {e}"]}
+
 
 
 # ═══════════════════════════════════════════════════════
