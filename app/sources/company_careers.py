@@ -20,6 +20,7 @@ from duckduckgo_search import DDGS
 
 from .base import BaseSource
 from ..schemas import RawJobResult, SourceType
+from ..utils.normalization import is_blocked_url, is_aggregator_page
 
 
 class CompanyCareersSource(BaseSource):
@@ -190,6 +191,9 @@ class CompanyCareersSource(BaseSource):
             for item in text_results:
                 url = item.get("href", "")
                 if not url or url in seen_urls:
+                    continue
+                # Block non-job content (blog posts, course pages, social media)
+                if is_blocked_url(url) or self._is_content_page(url):
                     continue
 
                 seen_urls.add(url)
@@ -395,31 +399,38 @@ class CompanyCareersSource(BaseSource):
         return job_links[:30]
 
     def _is_aggregator(self, url: str) -> bool:
-        """Check if URL belongs to a job aggregator (skip these)."""
-        aggregators = [
-            "linkedin.com",
-            "naukri.com",
-            "indeed.com",
-            "glassdoor.com",
-            "ambitionbox.com",
-            "shine.com",
-            "timesjobs.com",
-            "monster.com",
-            "foundit.in",
-            "instahyre.com",
-            "hirist.com",
-            "cutshort.io",
-            "angellist.com",
-            "wellfound.com",
-            "wikipedia.org",
-            "youtube.com",
-            "facebook.com",
-            "twitter.com",
-            "quora.com",
-            "reddit.com",
+        """
+        Check if URL belongs to a non-job content site (skip these in career discovery).
+        NOTE: Indian job boards (naukri, shine, timesjobs) are ALLOWED because
+        they list real walk-in drives and job postings we want to surface.
+        """
+        non_job_sites = [
+            # Generic social/encyclopedia
+            "wikipedia.org", "youtube.com", "facebook.com", "twitter.com",
+            "quora.com", "reddit.com", "medium.com", "pinterest.com",
+            # Tutorial/learning sites
+            "w3schools.com", "geeksforgeeks.org", "tutorialspoint.com",
+            "roadmap.sh", "udemy.com", "coursera.org", "edx.org",
+            # Foreign job boards (keep Indian ones)
+            "glassdoor.com", "monster.com", "indeed.com",
+            # Aggregator listing pages (not direct jobs)
+            "ycombinator.com", "topstartups.io", "techstartupslist.com",
+            "marketwatch.com", "investopedia.com",
         ]
         url_lower = url.lower()
-        return any(agg in url_lower for agg in aggregators)
+        return any(site in url_lower for site in non_job_sites)
+
+    def _is_content_page(self, url: str) -> bool:
+        """Return True if URL is a blog post, course, or article page — not a job."""
+        url_lower = url.lower()
+        content_patterns = [
+            "/blog/", "/blogs/", "/news/", "/article/", "/articles/",
+            "/course/", "/courses/", "/course-category/", "/training/",
+            "/learn/", "/tutorial/", "/guide/", "/resources/",
+            "/forum/", "/community/", "/discussion/",
+        ]
+        return any(pat in url_lower for pat in content_patterns)
+
 
     def _looks_like_career_page(self, url: str, search_result: dict) -> bool:
         """Heuristic: does this URL look like a company career page?"""

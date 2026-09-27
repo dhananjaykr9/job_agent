@@ -216,14 +216,25 @@ BLOCKED_DOMAINS = [
 # Domains that ARE job boards but whose specific URL patterns indicate
 # a search/listing page (not a specific job posting)
 AGGREGATOR_SEARCH_PATTERNS = [
-    "/job-search/",           # placementindia, etc.
-    "/search?",               # simplyhired, google jobs
+    "/search?",               # generic search result pages (simplyhired, google)
     "?q=",                    # generic search query URLs
-    "&l=",                    # location param in search
+    "&l=",                    # location filter param in search results
     "/careers?departments=",  # generic career category pages
-    "/jobs/role/",            # YC generic role pages
-    "/area-of-interest/",     # Accenture category pages
+    "/jobs/role/",            # YC generic role pages (not specific jobs)
+    "/area-of-interest/",     # Accenture career category pages
     "/explore-careers/",      # generic explore pages
+    # Content pages that are NEVER job postings
+    "/blog/",
+    "/blogs/",
+    "/article/",
+    "/articles/",
+    "/course/",
+    "/courses/",
+    "/course-category/",
+    "/training/",
+    "/learn/",
+    "/tutorial/",
+    "/guide/",
 ]
 
 # Job board aggregator domains — only pass if URL points to a specific job (has numeric/hash ID)
