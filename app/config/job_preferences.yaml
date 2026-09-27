@@ -108,31 +108,39 @@ search_queries:
   - "Backend Developer Bangalore fresher"
   - "Bengaluru IT company fresher openings"
 
-  # ── Walk-in Drives ──────────────────────────
-  - "walk in drive Pune IT fresher 2026"
-  - "walk in interview Pune software engineer"
-  - "walk in drive Pune Python developer"
-  - "walk in drive Pune data engineer"
-  - "walkin Pune IT company fresher"
-  - "walk in drive Hyderabad IT fresher"
-  - "walk in interview Bangalore software"
-  - "IT walk in drive fresher engineer 2026"
-  - "fresher walk in Pune developer"
-  - "walk in interview Pune engineering"
+  # ── Walk-in Drives (Pune focused) ──────────────
+  - "site:naukri.com walk in Pune fresher engineer 2026"
+  - "site:naukri.com walk in interview Pune Python developer"
+  - "site:shine.com walk in drive Pune IT fresher"
+  - "site:timesjobs.com walk in Pune software engineer fresher"
+  - "freshersworld.com walk in drive Pune engineer 2026"
+  - "walk in drive Pune data engineer fresher September October 2026"
+  - "walk in interview Pune Python developer fresher 2026"
+  - "walk in drive Pune AI ML engineer fresher"
+  - "walkin drive Pune backend developer fresher"
+  - "\"walk-in\" \"Pune\" \"fresher\" developer engineer 2026"
+  - "Pune IT company walkin fresher hiring site:naukri.com"
+  - "walk in drive Hyderabad data engineer fresher 2026"
+  - "walk in interview Bangalore software engineer fresher 2026"
+  - "IT walk in drive fresher engineer Pune 2026"
 
-  # ── Broad startup / midcap discovery ────────
-  - "startups hiring engineers Pune 2026"
-  - "midcap IT companies hiring Pune fresher"
-  - "series A B startup Pune hiring engineer"
-  - "product based company Pune hiring fresher"
-  - "SaaS startup Pune hiring developer"
-  - "startups hiring engineers Hyderabad 2026"
-  - "startups hiring engineers Bangalore 2026"
-  - "top startups Pune careers"
-  - "top startups Hyderabad careers"
-  - "top startups Bangalore careers"
-  - "YC startup India hiring engineer"
-  - "funded startup India hiring fresher developer"
+  # ── Direct job board targeted searches ──────────
+  - "site:naukri.com junior data engineer Pune 0-1 years"
+  - "site:naukri.com Python developer Pune fresher 2026"
+  - "site:naukri.com AI engineer Hyderabad fresher"
+  - "site:naukri.com software engineer fresher Bangalore 2026"
+  - "site:shine.com data engineer Pune fresher 2026"
+  - "site:timesjobs.com Python developer Pune 0-1 years"
+  - "site:freshersworld.com engineer Pune 2026 fresher"
+  - "site:instahyre.com data engineer Pune Hyderabad Bangalore"
+  - "site:wellfound.com data engineer India fresher 2026"
+
+  # ── Startup hiring ────────────────────────────────
+  - "startup hiring data engineer Pune 2026 fresher"
+  - "product based startup Pune hiring Python developer fresher"
+  - "SaaS startup Pune Hyderabad hiring engineer 0-1 years"
+  - "funded startup India hiring fresher data engineer developer"
+
 
 # ──────────────────────────────────────────────
 # LinkedIn Post Keywords

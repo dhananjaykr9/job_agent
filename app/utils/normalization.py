@@ -159,13 +159,19 @@ def clean_url(url: str) -> str:
     return url
 
 
-# Domains that NEVER represent job postings (encyclopedias, social media, tutorials, video sites)
+# Domains that NEVER represent a single direct job posting
 BLOCKED_DOMAINS = [
+    # Encyclopedias & knowledge bases
     "wikipedia.org",
     "wikimedia.org",
     "wiktionary.org",
+    "britannica.com",
+    "investopedia.com",
+    "dictionary.com",
+    # Video & entertainment
     "youtube.com",
     "youtu.be",
+    # Social feeds (not hiring posts — covered by linkedin_posts source)
     "facebook.com",
     "instagram.com",
     "twitter.com",
@@ -173,6 +179,8 @@ BLOCKED_DOMAINS = [
     "reddit.com",
     "quora.com",
     "medium.com",
+    "pinterest.com",
+    # Developer knowledge / tutorials (never job postings)
     "github.com",
     "gitlab.com",
     "stackoverflow.com",
@@ -181,22 +189,113 @@ BLOCKED_DOMAINS = [
     "w3schools.com",
     "tutorialspoint.com",
     "javatpoint.com",
+    "roadmap.sh",
+    "dev.to",
+    "hashnode.com",
+    # Learning platforms
     "coursera.org",
     "udemy.com",
     "edx.org",
-    "investopedia.com",
-    "britannica.com",
-    "dictionary.com",
-    "pinterest.com",
+    "skillshare.com",
+    "pluralsight.com",
+    # E-commerce (not jobs)
     "amazon.in",
     "amazon.com",
     "flipkart.com",
+    # Financial / news (not jobs)
+    "marketwatch.com",
+    "moneycontrol.com",
+    "economictimes.com",
+    # Generic job aggregators that give listing PAGES not specific jobs
+    # (individual job URLs from them are still fine — filtered by is_aggregator_page)
+    "ycombinator.com",
+    "topstartups.io",
+    "techstartupslist.com",
+]
+
+# Domains that ARE job boards but whose specific URL patterns indicate
+# a search/listing page (not a specific job posting)
+AGGREGATOR_SEARCH_PATTERNS = [
+    "/job-search/",           # placementindia, etc.
+    "/search?",               # simplyhired, google jobs
+    "?q=",                    # generic search query URLs
+    "&l=",                    # location param in search
+    "/careers?departments=",  # generic career category pages
+    "/jobs/role/",            # YC generic role pages
+    "/area-of-interest/",     # Accenture category pages
+    "/explore-careers/",      # generic explore pages
+]
+
+# Job board aggregator domains — only pass if URL points to a specific job (has numeric/hash ID)
+AGGREGATOR_DOMAINS = [
+    "builtin.com",
+    "builtinbengaluru.in",
+    "builtinpune.com",
+    "placementindia.com",
+    "simplyhired.co.in",
+    "simplyhired.com",
+    "accenture.com",          # their generic career pages (specific job URLs still valid)
+]
+
+# Phrases that strongly indicate the content is NOT a valid job posting
+INVALID_CONTENT_PHRASES = [
+    "currently not hiring",
+    "not accepting applications",
+    "position is closed",
+    "no longer accepting",
+    "this role has been filled",
+]
+
+# Title prefixes that indicate SENIOR / experienced roles (hard reject for fresher agent)
+SENIOR_TITLE_PREFIXES = [
+    "senior ", "sr. ", "sr ", "staff ", "principal ", "lead ",
+    "manager ", "director ", "head of ", "vp ", "vice president",
+    "chief ", "distinguished ", "expert ", "experienced ",
+]
+
+# Title suffixes that indicate seniority level numbers
+SENIOR_LEVEL_SUFFIXES = [
+    " ii", " iii", " iv", " 2", " 3", " 4",
 ]
 
 
 def is_blocked_url(url: str) -> bool:
-    """Return True if URL belongs to an encyclopedia, tutorial site, social feed, etc."""
+    """Return True if URL belongs to an encyclopedia, tutorial/social site, etc."""
     if not url:
         return True
     url_lower = url.lower()
     return any(domain in url_lower for domain in BLOCKED_DOMAINS)
+
+
+def is_aggregator_page(url: str) -> bool:
+    """Return True if URL is a generic search/listing page (not a specific job posting)."""
+    if not url:
+        return False
+    url_lower = url.lower()
+    # Check generic URL patterns that indicate a search/listing page
+    if any(pat in url_lower for pat in AGGREGATOR_SEARCH_PATTERNS):
+        return True
+    # For known aggregator sites, reject if URL doesn't contain a numeric or hash job ID
+    import re
+    for agg in AGGREGATOR_DOMAINS:
+        if agg in url_lower:
+            # A specific job page usually has a numeric ID or long hash in the URL
+            if not re.search(r'/(\d{5,}|[a-f0-9]{8,})', url_lower):
+                return True
+    return False
+
+
+def has_invalid_content(text: str) -> bool:
+    """Return True if the text strongly signals a non-active, closed, or invalid posting."""
+    text_lower = (text or "").lower()
+    return any(phrase in text_lower for phrase in INVALID_CONTENT_PHRASES)
+
+
+def is_senior_title(title: str) -> bool:
+    """Return True if job title indicates a senior/experienced role (not suitable for freshers)."""
+    t = title.lower().strip()
+    if any(t.startswith(pfx) for pfx in SENIOR_TITLE_PREFIXES):
+        return True
+    if any(t.endswith(sfx) for sfx in SENIOR_LEVEL_SUFFIXES):
+        return True
+    return False

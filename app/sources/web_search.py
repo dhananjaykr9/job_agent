@@ -13,7 +13,7 @@ from duckduckgo_search import DDGS
 
 from .base import BaseSource
 from ..schemas import RawJobResult, SourceType
-from ..utils.normalization import is_blocked_url
+from ..utils.normalization import is_blocked_url, is_aggregator_page
 
 
 class WebSearchSource(BaseSource):
@@ -42,7 +42,7 @@ class WebSearchSource(BaseSource):
 
                 for item in text_results:
                     url = item.get("href", "")
-                    if not url or url in seen_urls or is_blocked_url(url):
+                    if not url or url in seen_urls or is_blocked_url(url) or is_aggregator_page(url):
                         continue
                     seen_urls.add(url)
 
@@ -74,7 +74,7 @@ class WebSearchSource(BaseSource):
 
                         for item in news_results:
                             url = item.get("url", "")
-                            if not url or url in seen_urls or is_blocked_url(url):
+                            if not url or url in seen_urls or is_blocked_url(url) or is_aggregator_page(url):
                                 continue
                             seen_urls.add(url)
 

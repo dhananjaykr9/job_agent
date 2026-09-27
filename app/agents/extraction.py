@@ -114,53 +114,78 @@ class ExtractionAgent:
         Fast heuristic fallback when LLM is rate-limited or fails.
         Extracts company, title, and location from title/snippet/URL.
         """
+        import re as _re
+        from urllib.parse import urlparse
+        from ..utils.normalization import (
+            is_blocked_url, is_aggregator_page, has_invalid_content, is_senior_title,
+        )
+
         title = raw_result.title or ""
         snippet = raw_result.snippet or ""
-        content = f"{title}\n{snippet}"
+        content = "{t}\n{s}".format(t=title, s=snippet)
 
-        # Quick check if it looks like a job
-        job_keywords = ["engineer", "developer", "analyst", "intern", "associate", "hiring", "walk in", "walkin", "data", "python", "sql", "ai", "ml", "fresher"]
+        job_keywords = [
+            "engineer", "developer", "analyst", "intern", "associate",
+            "hiring", "walk in", "walkin", "data", "python", "sql", "ai", "ml", "fresher"
+        ]
         if not any(kw in content.lower() for kw in job_keywords):
             return None
 
-        # Extract company from source or URL
-        company = raw_result.source if raw_result.source not in ("duckduckgo", "duckduckgo_news", "google_jobs", "walkin_drive", "linkedin") else ""
+        if is_blocked_url(raw_result.url) or is_aggregator_page(raw_result.url):
+            return None
+
+        if has_invalid_content(content):
+            return None
+
+        FAKE_COMPANY_NAMES = {
+            "builtin", "builtinbengaluru", "builtinpune", "topstartups",
+            "techstartupslist", "roadmap", "marketwatch", "findmyjobss",
+            "freshershunt", "placementindia", "simplyhired", "ycombinator",
+            "linkedin", "naukri", "indeed", "glassdoor", "monster", "timesjobs",
+        }
+        company = raw_result.source if raw_result.source not in (
+            "duckduckgo", "duckduckgo_news", "google_jobs", "walkin_drive", "linkedin"
+        ) else ""
+
         if not company:
-            from urllib.parse import urlparse
             try:
                 domain = urlparse(raw_result.url).netloc.replace("www.", "")
-                parts = domain.split(".")
-                if parts and parts[0] not in ("linkedin", "naukri", "indeed"):
-                    company = parts[0].replace("-", " ").title()
+                subdomain = domain.split(".")[0].lower()
+                if subdomain not in FAKE_COMPANY_NAMES:
+                    company = subdomain.replace("-", " ").title()
             except Exception:
                 pass
 
         if not company:
-            # Try to find company in title (e.g. "Data Engineer at Microsoft" or "Amdocs hiring...")
-            import re
-            m = re.search(r"(?:at|@|hiring\s+at)\s+([A-Z][a-zA-Z0-9\s]{2,20})", title, re.IGNORECASE)
+            pat = r"(?:at|@|hiring\s+at|by)\s+([A-Z][a-zA-Z0-9 ]{2,25})"
+            m = _re.search(pat, title, _re.IGNORECASE)
             if m:
                 company = m.group(1).strip()
 
-        # Location heuristic
+        if not company or company.lower() in FAKE_COMPANY_NAMES or len(company.strip()) <= 2:
+            return None
+
+        clean_title = title.split(" - ")[0].split(" | ")[0].split("\u2013")[0][:80].strip()
+        clean_title = _re.split(r"[>|]|Currently not hiring", clean_title, flags=_re.IGNORECASE)[0].strip()
+        if not clean_title or len(clean_title) < 4:
+            return None
+
+        if is_senior_title(clean_title):
+            return None
+
         location = ""
         for loc in ["Pune", "Hyderabad", "Bangalore", "Bengaluru", "Remote", "India"]:
             if loc.lower() in content.lower():
                 location = loc
                 break
 
-        # Clean title
-        clean_title = title.split(" - ")[0].split(" | ")[0].split(" – ")[0][:60]
-        if not clean_title or len(clean_title) < 4:
-            clean_title = "Software Engineer"
-
         return ExtractionResult(
-            company_name=company or "IT Company",
+            company_name=company,
             job_title=clean_title,
             location=location or "Pune / Hyderabad / Bangalore",
             experience="0-1 years",
             status="active",
-            confidence=0.85,
+            confidence=0.70,
             description=snippet[:500],
         )
 

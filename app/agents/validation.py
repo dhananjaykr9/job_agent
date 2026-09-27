@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from ..schemas import JobCandidate
 from ..utils.logger import get_logger
-from ..utils.normalization import is_blocked_url
+from ..utils.normalization import is_blocked_url, is_aggregator_page, has_invalid_content, is_senior_title
 
 logger = get_logger("job_agent.validation")
 
@@ -46,8 +46,19 @@ class ValidationAgent:
         if job.job_url:
             if not job.job_url.startswith(("http://", "https://")):
                 issues.append(f"Invalid URL format: {job.job_url}")
-            if is_blocked_url(job.job_url):
+            elif is_blocked_url(job.job_url):
                 issues.append(f"Blocked non-job domain URL (e.g. Wikipedia/YouTube): {job.job_url}")
+            elif is_aggregator_page(job.job_url):
+                issues.append(f"Generic aggregator listing/search page (not a specific job): {job.job_url}")
+
+        # ── Closed / inactive posting ───────────────────
+        combined_text = f"{job.job_title} {job.description or ''}"
+        if has_invalid_content(combined_text):
+            issues.append(f"Posting marked as inactive or closed: '{job.job_title}'")
+
+        # ── Senior title — hard reject for fresher agent ──
+        if is_senior_title(job.job_title):
+            issues.append(f"Senior/experienced title not suitable for fresher agent: '{job.job_title}'")
 
         # ── Suspicious patterns ─────────────────────────
         title_lower = job.job_title.lower()
@@ -81,15 +92,25 @@ class ValidationAgent:
             invalid_companies = [
                 "en", "in", "it", "to", "at", "by", "for", "the", "an", "a",
                 "n/a", "na", "unknown", "--", "-", "it company", "company",
-                "wikipedia", "youtube", "reddit", "quora", "medium"
+                "wikipedia", "youtube", "reddit", "quora", "medium",
+                "builtin", "topstartups", "techstartupslist", "builtinbengaluru",
+                "roadmap", "marketwatch", "findmyjobss", "freshershunt",
+                "placementindia", "simplyhired", "ycombinator",
             ]
             if clean_company in invalid_companies:
-                issues.append(f"Placeholder or non-company name: '{job.company_name}'")
+                issues.append(f"Placeholder or aggregator name (not a real employer): '{job.company_name}'")
+
 
         # ── Determine validity ──────────────────────────
         has_required = not any("Missing required" in i for i in issues)
         is_suspicious = any("Suspicious" in i for i in issues)
-        is_blocked = any("Blocked non-job" in i or "generic topic" in i or "Company name too short" in i or "Placeholder or non-company" in i for i in issues)
+        is_blocked = any(
+            "Blocked non-job" in i or "generic topic" in i
+            or "Company name too short" in i or "Placeholder or non-company" in i
+            or "Generic aggregator" in i or "inactive or closed" in i
+            or "Senior/experienced title" in i
+            for i in issues
+        )
 
         is_valid = has_required and not is_suspicious and not is_blocked
 
