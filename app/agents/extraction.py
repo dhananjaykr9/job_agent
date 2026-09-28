@@ -142,30 +142,55 @@ class ExtractionAgent:
             "techstartupslist", "roadmap", "marketwatch", "findmyjobss",
             "freshershunt", "placementindia", "simplyhired", "ycombinator",
             "linkedin", "naukri", "indeed", "glassdoor", "monster", "timesjobs",
+            "foundit", "bayt", "hirist", "instahyre", "cutshort", "careesma",
+            "freshersworld", "shine", "quikr", "olx", "monsterindia",
         }
-        company = raw_result.source if raw_result.source not in (
-            "duckduckgo", "duckduckgo_news", "google_jobs", "walkin_drive", "linkedin"
-        ) else ""
 
-        if not company:
+        # 1. Check if raw_result already has a valid company name
+        company = (raw_result.company or "").strip()
+
+        # 2. Check raw_content for "Company: <name>"
+        if not company or company.lower() in FAKE_COMPANY_NAMES:
+            m = _re.search(r"Company:\s*([^\n\r]+)", raw_result.raw_content or "")
+            if m:
+                c = m.group(1).strip()
+                if c and c.lower() not in FAKE_COMPANY_NAMES and len(c) > 2:
+                    company = c
+
+        # 3. Check LinkedIn URL slug for company: ...-at-<company>-<id>
+        if (not company or company.lower() in FAKE_COMPANY_NAMES) and "linkedin.com/jobs/view/" in raw_result.url:
+            m = _re.search(r"-at-([a-zA-Z0-9\-]+)-\d+", raw_result.url)
+            if m:
+                c = m.group(1).replace("-", " ").strip().title()
+                if c and c.lower() not in FAKE_COMPANY_NAMES:
+                    company = c
+
+        # 4. Check title for "at <Company>" or "by <Company>"
+        if not company or company.lower() in FAKE_COMPANY_NAMES:
+            pat = r"(?:at|@|hiring\s+at|by)\s+([A-Z][a-zA-Z0-9 &.,]{2,30})"
+            m = _re.search(pat, title, _re.IGNORECASE)
+            if m:
+                c = m.group(1).strip()
+                if c.lower() not in FAKE_COMPANY_NAMES:
+                    company = c
+
+        # 5. Extract domain subdomain as fallback ONLY if it's not a known aggregator/social
+        if not company or company.lower() in FAKE_COMPANY_NAMES:
             try:
                 domain = urlparse(raw_result.url).netloc.replace("www.", "")
                 subdomain = domain.split(".")[0].lower()
-                if subdomain not in FAKE_COMPANY_NAMES:
+                if subdomain not in FAKE_COMPANY_NAMES and len(subdomain) > 2:
                     company = subdomain.replace("-", " ").title()
             except Exception:
                 pass
 
-        if not company:
-            pat = r"(?:at|@|hiring\s+at|by)\s+([A-Z][a-zA-Z0-9 ]{2,25})"
-            m = _re.search(pat, title, _re.IGNORECASE)
-            if m:
-                company = m.group(1).strip()
-
+        # NEVER allow source names (e.g. "linkedin_jobs_...") or fake company names
         if not company or company.lower() in FAKE_COMPANY_NAMES or len(company.strip()) <= 2:
             return None
+        if any(prefix in company.lower() for prefix in ["linkedin_jobs", "naukri_", "shine_", "duckduckgo", "freshersworld"]):
+            return None
 
-        clean_title = title.split(" - ")[0].split(" | ")[0].split("\u2013")[0][:80].strip()
+        clean_title = title.split(" - ")[0].split(" | ")[0].split("–")[0][:80].strip()
         clean_title = _re.split(r"[>|]|Currently not hiring", clean_title, flags=_re.IGNORECASE)[0].strip()
         if not clean_title or len(clean_title) < 4:
             return None
@@ -173,19 +198,43 @@ class ExtractionAgent:
         if is_senior_title(clean_title):
             return None
 
-        location = ""
-        for loc in ["Pune", "Hyderabad", "Bangalore", "Bengaluru", "Remote", "India"]:
-            if loc.lower() in content.lower():
-                location = loc
-                break
+        # Experience extraction — never blindly claim "0-1 years" if text requires more!
+        full_text = f"{title}\n{snippet}\n{raw_result.raw_content[:2000]}"
+        exp = (raw_result.experience or "").strip()
+
+        # Check for explicit experience requirements in JD or snippet
+        exp_match = _re.search(r'(?:exp(?:erience)?|exp)\s*[-:]?\s*([2-9]|\d{2,})\s*\+?\s*years?', full_text, _re.IGNORECASE)
+        if not exp_match:
+            exp_match = _re.search(r'([2-9]|\d{2,})\s*[-–to]+\s*\d*\s*years?(?:\s*of)?\s*(?:relevant\s*)?experience', full_text, _re.IGNORECASE)
+        if not exp_match:
+            exp_match = _re.search(r'minimum\s*([2-9]|\d{2,})\s*years?', full_text, _re.IGNORECASE)
+        if not exp_match:
+            exp_match = _re.search(r'([2-9]|\d{2,})\s*years?\s*of\s*experience', full_text, _re.IGNORECASE)
+
+        if exp_match:
+            # JD explicitly requires 2+, 3+, 5+ years -> REJECT immediately!
+            return None
+
+        if not exp:
+            if any(kw in full_text.lower() for kw in ["fresher", "intern", "internship", "trainee", "entry level", "entry-level", "campus"]):
+                exp = "0-1 years"
+            else:
+                exp = "0-1 years"
+
+        location = (raw_result.location or "").strip()
+        if not location:
+            for loc in ["Pune", "Hyderabad", "Bangalore", "Bengaluru", "Remote", "India"]:
+                if loc.lower() in content.lower():
+                    location = loc
+                    break
 
         return ExtractionResult(
             company_name=company,
             job_title=clean_title,
             location=location or "Pune / Hyderabad / Bangalore",
-            experience="0-1 years",
+            experience=exp,
             status="active",
-            confidence=0.70,
+            confidence=0.75,
             description=snippet[:500],
         )
 

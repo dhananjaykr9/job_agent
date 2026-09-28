@@ -61,6 +61,9 @@ class RawJobResult(BaseModel):
     url: str = ""
     raw_content: str = ""
     title: Optional[str] = None
+    company: Optional[str] = None
+    location: Optional[str] = None
+    experience: Optional[str] = None
     snippet: Optional[str] = None
     discovered_at: datetime = Field(default_factory=datetime.now)
 

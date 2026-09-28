@@ -1,4 +1,4 @@
-﻿"""
+"""
 Direct Job Board Scraper — fetches directly from Indian job portals.
 
 No DuckDuckGo needed. Hits Naukri, Shine, Freshersworld, and LinkedIn Jobs
@@ -14,7 +14,7 @@ from urllib.parse import urljoin
 
 from .base import BaseSource
 from ..schemas import RawJobResult, SourceType
-from ..utils.normalization import is_senior_title, has_invalid_content
+from ..utils.normalization import is_senior_title, has_invalid_content, extract_years
 
 
 NAUKRI_WALKIN_URLS = [
@@ -170,6 +170,8 @@ class DirectJobBoardSource(BaseSource):
                 placeholders = item.get("placeholders") or []
                 location = placeholders[0].get("label", "") if len(placeholders) > 0 else ""
                 exp = placeholders[1].get("label", "0-1 years") if len(placeholders) > 1 else "0-1 years"
+                if extract_years(exp) and extract_years(exp) > 1:
+                    continue  # Skip experienced jobs!
                 job_url = item.get("jdURL") or item.get("url") or ""
                 if job_url and not job_url.startswith("http"):
                     job_url = f"https://www.naukri.com{job_url}"
@@ -203,6 +205,7 @@ class DirectJobBoardSource(BaseSource):
                 except Exception:
                     continue
 
+            import re as _re
             for card in soup.select("ul.jobs-search__results-list li, div.base-card, div[class*='job-search-card']")[:25]:
                 try:
                     a = card.select_one("a.base-card__full-link, a[class*='job-card'], h3 a, h4 a")
@@ -212,12 +215,77 @@ class DirectJobBoardSource(BaseSource):
                     href = a.get("href", "").split("?")[0]
                     if not href or href in seen_urls or is_senior_title(title):
                         continue
-                    company_el = card.select_one("h4, a[class*='company'], span[class*='company']")
+
+                    # Check title slug for senior indicators
+                    slug = href.split('/jobs/view/')[-1].split('?')[0]
+                    title_slug = slug.split('-at-')[0].replace('-', ' ')
+                    if is_senior_title(title_slug):
+                        continue
+
+                    company_el = card.select_one("h4.base-search-card__subtitle, h4, a[data-tracking-control-name*='company']")
                     company = company_el.get_text(strip=True) if company_el else ""
-                    loc_el = card.select_one("span[class*='location']")
+                    if not company and "-at-" in href:
+                        m_slug = _re.search(r"-at-([a-zA-Z0-9\-]+)-\d+", href)
+                        if m_slug:
+                            company = m_slug.group(1).replace("-", " ").title()
+
+                    loc_el = card.select_one("span.job-search-card__location, span[class*='location']")
                     location = loc_el.get_text(strip=True) if loc_el else ""
+
+                    # Inspect job detail page to verify experience and seniority
+                    exp_str = "0-1 years"
+                    try:
+                        job_resp = client.get(href, timeout=8.0)
+                        if job_resp.status_code == 200:
+                            job_html = job_resp.text
+
+                            # 1. Seniority level check (Mid-Senior, Director, Executive -> REJECT)
+                            m_sen = _re.search(r'Seniority\s*level\s*</h3>\s*<span[^>]*>\s*([^<]+)\s*</span>', job_html, _re.IGNORECASE)
+                            seniority = m_sen.group(1).strip() if m_sen else ""
+                            if seniority.lower() in ["mid-senior level", "director", "executive"]:
+                                continue
+
+                            # 2. Description text experience check
+                            clean_desc = _re.sub(r'<[^>]+>', ' ', job_html)
+                            exp_match = _re.search(r'(?:exp(?:erience)?|exp)\s*[-:]?\s*([2-9]|\d{2,})\s*\+?\s*years?', clean_desc, _re.IGNORECASE)
+                            if not exp_match:
+                                exp_match = _re.search(r'([2-9]|\d{2,})\s*[-–to]+\s*\d*\s*years?(?:\s*of)?\s*(?:relevant\s*)?experience', clean_desc, _re.IGNORECASE)
+                            if not exp_match:
+                                exp_match = _re.search(r'minimum\s*([2-9]|\d{2,})\s*years?', clean_desc, _re.IGNORECASE)
+                            if not exp_match:
+                                exp_match = _re.search(r'([2-9]|\d{2,})\s*years?\s*of\s*experience', clean_desc, _re.IGNORECASE)
+
+                            if exp_match:
+                                continue  # Reject! Explicitly requires 2+, 3+, 5+ years!
+
+                            # 3. Company fallback
+                            if not company or len(company) <= 2:
+                                m_top = _re.search(r'class="topcard__org-name-link[^"]*"[^>]*>\s*([^<]+)\s*<', job_html)
+                                if not m_top:
+                                    m_top = _re.search(r'"hiringOrganization":\s*\{[^}]*"name":\s*"([^"]+)"', job_html)
+                                if m_top:
+                                    company = m_top.group(1).strip()
+
+                            # 4. Set accurate experience
+                            if seniority.lower() == "internship":
+                                exp_str = "Internship (0 years)"
+                            elif seniority.lower() == "entry level":
+                                exp_str = "0-1 years"
+                            elif any(kw in clean_desc.lower() for kw in ["fresher", "intern", "trainee", "campus", "entry level", "entry-level"]):
+                                exp_str = "0-1 years"
+                            elif seniority.lower() == "associate":
+                                exp_str = "0-1 years"
+                            else:
+                                continue
+                    except Exception:
+                        if not any(k in title.lower() for k in ["intern", "fresher", "trainee", "entry level"]):
+                            continue
+
                     seen_urls.add(href)
-                    results.append(self._make_result(source=f"linkedin_jobs_{label}", url=href, title=title, company=company, location=location))
+                    results.append(self._make_result(
+                        source="linkedin_jobs", url=href, title=title,
+                        company=company, location=location, experience=exp_str,
+                    ))
                 except Exception:
                     continue
         except Exception as e:
@@ -267,6 +335,9 @@ class DirectJobBoardSource(BaseSource):
             source_type=SourceType.WEB_SEARCH,
             url=url,
             title=title,
+            company=company,
+            location=location,
+            experience=experience,
             snippet=snippet or f"{company} | {location}",
             raw_content=(
                 f"[{source.upper()}]\n"

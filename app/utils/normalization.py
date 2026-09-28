@@ -216,9 +216,14 @@ BLOCKED_DOMAINS = [
 # Domains that ARE job boards but whose specific URL patterns indicate
 # a search/listing page (not a specific job posting)
 AGGREGATOR_SEARCH_PATTERNS = [
-    "/search?",               # generic search result pages (simplyhired, google)
-    "?q=",                    # generic search query URLs
-    "&l=",                    # location filter param in search results
+    "/search/",               # generic search pages (foundit.in/search/..., simplyhired.co.in/search/...)
+    "/search?",               # generic search query URLs
+    "?q=",                    # search query param
+    "&l=",                    # location filter param
+    "-jobs-in-",              # aggregator search listing pages like '...-jobs-in-hyderabad'
+    "/jobs-in-",              # generic city job listing
+    "/jobs/search",           # search endpoints
+    "/job-search?",           # search endpoints with params
     "/careers?departments=",  # generic career category pages
     "/jobs/role/",            # YC generic role pages (not specific jobs)
     "/area-of-interest/",     # Accenture career category pages
@@ -239,13 +244,29 @@ AGGREGATOR_SEARCH_PATTERNS = [
 
 # Job board aggregator domains — only pass if URL points to a specific job (has numeric/hash ID)
 AGGREGATOR_DOMAINS = [
+    "foundit.in",
+    "foundit.com",
+    "bayt.com",
     "builtin.com",
     "builtinbengaluru.in",
     "builtinpune.com",
     "placementindia.com",
     "simplyhired.co.in",
     "simplyhired.com",
-    "accenture.com",          # their generic career pages (specific job URLs still valid)
+    "freshersworld.com",
+    "timesjobs.com",
+    "shine.com",
+    "monsterindia.com",
+    "hirist.tech",
+    "hirist.com",
+    "instahyre.com",
+    "cutshort.io",
+    "careesma.in",
+    "indeed.com",
+    "indeed.co.in",
+    "glassdoor.com",
+    "glassdoor.co.in",
+    "accenture.com",          # their generic career category pages (specific job URLs still valid)
 ]
 
 # Phrases that strongly indicate the content is NOT a valid job posting
@@ -257,16 +278,17 @@ INVALID_CONTENT_PHRASES = [
     "this role has been filled",
 ]
 
-# Title prefixes that indicate SENIOR / experienced roles (hard reject for fresher agent)
-SENIOR_TITLE_PREFIXES = [
-    "senior ", "sr. ", "sr ", "staff ", "principal ", "lead ",
-    "manager ", "director ", "head of ", "vp ", "vice president",
-    "chief ", "distinguished ", "expert ", "experienced ",
-]
-
-# Title suffixes that indicate seniority level numbers
-SENIOR_LEVEL_SUFFIXES = [
-    " ii", " iii", " iv", " 2", " 3", " 4",
+# Robust regex patterns for detecting senior/experienced roles anywhere in title
+SENIOR_TITLE_REGEXES = [
+    # Senior keywords anywhere in the title
+    re.compile(r'\b(sr\.?|senior|lead|principal|staff|manager|mgr|director|vp|vice\s+president|head\s+of|chief|distinguished|architect|specialist|expert|experienced|lateral)\b', re.IGNORECASE),
+    # Roman numeral levels: II, III, IV, V (e.g. "Data Engineer II", "SDE III")
+    re.compile(r'\b(ii|iii|iv|v)\b', re.IGNORECASE),
+    # Numeric levels: Engineer 2, Associate 2, Developer 3, Level 2, L2, SDE-2, etc.
+    re.compile(r'\b(?:engineer|developer|associate|analyst|consultant|sde|de|swe)\s*[-_ ]*([2-9])\b', re.IGNORECASE),
+    re.compile(r'\b(level\s*[2-6]|l[2-6]|sde\s*[-_ ]?[2-4]|de\s*[-_ ]?[2-4]|band\s*[6-9])\b', re.IGNORECASE),
+    # Experience years explicitly in title: e.g. "3+ years", "2-5 yrs"
+    re.compile(r'\b([2-9]|\d{2,})\+?\s*(?:to\s*\d+\s*)?(?:years?|yrs?|yr)\b', re.IGNORECASE),
 ]
 
 
@@ -287,10 +309,9 @@ def is_aggregator_page(url: str) -> bool:
     if any(pat in url_lower for pat in AGGREGATOR_SEARCH_PATTERNS):
         return True
     # For known aggregator sites, reject if URL doesn't contain a numeric or hash job ID
-    import re
     for agg in AGGREGATOR_DOMAINS:
         if agg in url_lower:
-            # A specific job page usually has a numeric ID or long hash in the URL
+            # A specific job page must have a numeric ID (5+ digits) or 8+ char hex/alphanumeric hash
             if not re.search(r'/(\d{5,}|[a-f0-9]{8,})', url_lower):
                 return True
     return False
@@ -304,9 +325,7 @@ def has_invalid_content(text: str) -> bool:
 
 def is_senior_title(title: str) -> bool:
     """Return True if job title indicates a senior/experienced role (not suitable for freshers)."""
-    t = title.lower().strip()
-    if any(t.startswith(pfx) for pfx in SENIOR_TITLE_PREFIXES):
-        return True
-    if any(t.endswith(sfx) for sfx in SENIOR_LEVEL_SUFFIXES):
-        return True
-    return False
+    if not title:
+        return False
+    t = title.strip()
+    return any(rx.search(t) for rx in SENIOR_TITLE_REGEXES)

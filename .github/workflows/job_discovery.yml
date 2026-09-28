@@ -2,9 +2,9 @@ name: Hourly Job Discovery Agent (8 AM - 10 PM IST)
 
 on:
   schedule:
-    # Runs hourly from 8:00 AM to 10:00 PM IST (02:30 to 16:30 UTC)
-    # Minute 30 of every hour between 2 and 16 UTC = Minute 00 of 8 AM to 10 PM IST
-    - cron: '30 2-16 * * *'
+    # Runs hourly from 7:45 AM to 9:45 PM IST (02:15 to 16:15 UTC)
+    # Using minute 15 instead of 30/00 prevents GitHub Actions queue drops during peak congestion
+    - cron: '15 2-16 * * *'
   workflow_dispatch: # Allows manual trigger anytime from GitHub "Run workflow" button
 
 # Grant write permissions to commit updated Excel tracker back to repo

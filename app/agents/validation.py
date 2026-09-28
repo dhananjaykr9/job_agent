@@ -96,19 +96,22 @@ class ValidationAgent:
                 "builtin", "topstartups", "techstartupslist", "builtinbengaluru",
                 "roadmap", "marketwatch", "findmyjobss", "freshershunt",
                 "placementindia", "simplyhired", "ycombinator",
+                "foundit", "bayt", "hirist", "instahyre", "cutshort", "careesma",
+                "shine", "timesjobs", "freshersworld", "monsterindia",
             ]
             if clean_company in invalid_companies:
                 issues.append(f"Placeholder or aggregator name (not a real employer): '{job.company_name}'")
-
+            if any(pfx in clean_company for pfx in ["linkedin_jobs", "naukri_", "shine_", "duckduckgo", "freshersworld"]):
+                issues.append(f"Company name is a source tag or search query (not a real employer): '{job.company_name}'")
 
         # ── Determine validity ──────────────────────────
         has_required = not any("Missing required" in i for i in issues)
         is_suspicious = any("Suspicious" in i for i in issues)
         is_blocked = any(
             "Blocked non-job" in i or "generic topic" in i
-            or "Company name too short" in i or "Placeholder or non-company" in i
-            or "Generic aggregator" in i or "inactive or closed" in i
-            or "Senior/experienced title" in i
+            or "Company name too short" in i or "Placeholder or aggregator" in i
+            or "is a source tag" in i or "Generic aggregator" in i
+            or "inactive or closed" in i or "Senior/experienced title" in i
             for i in issues
         )
 
